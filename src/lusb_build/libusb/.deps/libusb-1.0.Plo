@@ -1,0 +1,28 @@
+libusb-1.0.lo: ../../libusb-1.0.25/libusb/libusb-1.0.rc \
+ D:/msys64/mingw32/include/winresrc.h \
+ D:/msys64/mingw32/include/winuser.rh \
+ D:/msys64/mingw32/include/commctrl.rh D:/msys64/mingw32/include/dde.rh \
+ D:/msys64/mingw32/include/winnt.rh D:/msys64/mingw32/include/dlgs.h \
+ D:/msys64/mingw32/include/winver.h D:/msys64/mingw32/include/_mingw.h \
+ D:/msys64/mingw32/include/_mingw_mac.h \
+ D:/msys64/mingw32/include/_mingw_secapi.h \
+ D:/msys64/mingw32/include/vadefs.h \
+ D:/msys64/mingw32/include/sdks/_mingw_ddk.h \
+ D:/msys64/mingw32/include/_mingw_unicode.h \
+ ../../libusb-1.0.25/libusb/version.h \
+ ../../libusb-1.0.25/libusb/version_nano.h
+D:/msys64/mingw32/include/winresrc.h:
+D:/msys64/mingw32/include/winuser.rh:
+D:/msys64/mingw32/include/commctrl.rh:
+D:/msys64/mingw32/include/dde.rh:
+D:/msys64/mingw32/include/winnt.rh:
+D:/msys64/mingw32/include/dlgs.h:
+D:/msys64/mingw32/include/winver.h:
+D:/msys64/mingw32/include/_mingw.h:
+D:/msys64/mingw32/include/_mingw_mac.h:
+D:/msys64/mingw32/include/_mingw_secapi.h:
+D:/msys64/mingw32/include/vadefs.h:
+D:/msys64/mingw32/include/sdks/_mingw_ddk.h:
+D:/msys64/mingw32/include/_mingw_unicode.h:
+../../libusb-1.0.25/libusb/version.h:
+../../libusb-1.0.25/libusb/version_nano.h:
