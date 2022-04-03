@@ -12,7 +12,7 @@ OBJS= flashcmd_api.o spi_controller.o spi_nand_flash.o spi_nor_flash.o ch341a_sp
 ifeq ($(EEPROM_SUPPORT),y)
 CFLAGS += -DEEPROM_SUPPORT
 OBJS += ch341a_i2c.o i2c_eeprom.o
-OBJS += bitbang_microwire.o mw_eeprom.o ch341a_gpio.o
+OBJS += bitbang_microwire.o mw_eeprom.o ch341a_gpio.o esp32_cdc.o
 endif
 
 all: SNANDer

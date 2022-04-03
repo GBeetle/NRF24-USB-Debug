@@ -16,7 +16,6 @@
  */
 
 #include "nrf24_interface.h"
-#include "ch341a_spi.h"
 
 struct rf24 radio;
 
@@ -113,7 +112,7 @@ WK_RESULT rf24_init(struct rf24 *nrf24)
 {
     WK_RESULT res = WK_OK;
 
-    if (ch341a_spi_init() < 0) {
+    if (esp32_cdc_init() < 0) {
         printf("Programmer device not found!\n\n");
         return WK_FAIL;
     }
@@ -219,7 +218,6 @@ WK_RESULT rf24_init(struct rf24 *nrf24)
     nrf24->_pa_level_reg_value      = &_pa_level_reg_value;
     nrf24->setRadiation             = &setRadiation;
 
-    ch341a_gpio_setbits(nrf24->ch341a_iomap);  // reset cs0(ce) cs1(csn)
 //error_exit:
     return res;
 }
@@ -343,7 +341,6 @@ static WK_RESULT csn(struct rf24 *nrf24, bool mode)
     else
         //nrf24->ch341a_iomap = 0X00;
         nrf24->ch341a_iomap &= CS0_DISABLE;
-    ch341a_gpio_setbits(nrf24->ch341a_iomap);
     return WK_OK;
 }
 
@@ -355,7 +352,6 @@ static WK_RESULT ce(struct rf24 *nrf24, bool level)
         nrf24->ch341a_iomap |= CS1_ENABLE;
     else
         nrf24->ch341a_iomap &= CS1_DISABLE;
-    ch341a_gpio_setbits(nrf24->ch341a_iomap);
     return WK_OK;
 }
 
@@ -392,7 +388,7 @@ static WK_RESULT read_registers(struct rf24 *nrf24, uint8_t reg, uint8_t *buf, u
     CHK_BOOL(len > 0);
     nrf24->spi_txbuff[0] = R_REGISTER | (REGISTER_MASK & reg);
     //CHK_RES(nrf24->bus->readWriteBytes(nrf24->bus, nrf24->addr, 0x00, len + 1, nrf24->spi_rxbuff, nrf24->spi_txbuff));
-    ch341a_spi_send_command(len + 1, len + 1, nrf24->spi_txbuff, nrf24->spi_rxbuff);
+    esp32_cdc_send_command(len + 1, len + 1, nrf24->spi_txbuff, nrf24->spi_rxbuff);
     nrf24->status = nrf24->spi_rxbuff[0];
     memcpy(buf, nrf24->spi_rxbuff + 1, len);
 error_exit:
@@ -408,12 +404,12 @@ static WK_RESULT write_register(struct rf24 *nrf24, uint8_t reg, uint8_t value, 
 
     //nrf24->beginTransaction(nrf24);
     if (is_cmd_only) {
-        ch341a_spi_send_command(1, 0, &value, NULL);
+        esp32_cdc_send_command(1, 0, &value, NULL);
     }
     else {
         nrf24->spi_txbuff[0] = (W_REGISTER | reg);
         nrf24->spi_txbuff[1] = value;
-        ch341a_spi_send_command(2, 2, nrf24->spi_txbuff, nrf24->spi_rxbuff);
+        esp32_cdc_send_command(2, 2, nrf24->spi_txbuff, nrf24->spi_rxbuff);
         nrf24->status = nrf24->spi_rxbuff[0];
     }
     //nrf24->endTransaction(nrf24);
@@ -431,7 +427,7 @@ static WK_RESULT write_registers(struct rf24 *nrf24, uint8_t reg, const uint8_t 
     nrf24->spi_txbuff[0] = W_REGISTER | (REGISTER_MASK & reg);
     memcpy(nrf24->spi_txbuff + 1, buf, len);
     //CHK_RES(nrf24->bus->readWriteBytes(nrf24->bus, nrf24->addr, 0x00, len + 1, nrf24->spi_rxbuff, nrf24->spi_txbuff));
-    ch341a_spi_send_command(len + 1, len + 1, nrf24->spi_txbuff, nrf24->spi_rxbuff);
+    esp32_cdc_send_command(len + 1, len + 1, nrf24->spi_txbuff, nrf24->spi_rxbuff);
     nrf24->status = nrf24->spi_rxbuff[0];
 error_exit:
     nrf24->endTransaction(nrf24);
@@ -462,7 +458,7 @@ static WK_RESULT write_payload(struct rf24 *nrf24, const void *buf, uint8_t data
     memcpy(nrf24->spi_txbuff + 1, buf, data_len);
     memset(nrf24->spi_txbuff + 1 + data_len, 0x00, blank_len);
     //CHK_RES(nrf24->bus->readWriteBytes(nrf24->bus, nrf24->addr, 0x00, size, nrf24->spi_rxbuff, nrf24->spi_txbuff));
-    ch341a_spi_send_command(size, size, nrf24->spi_txbuff, nrf24->spi_rxbuff);
+    esp32_cdc_send_command(size, size, nrf24->spi_txbuff, nrf24->spi_rxbuff);
     nrf24->status = nrf24->spi_rxbuff[0]; // status is 1st byte of receive buffer
 error_exit:
     nrf24->endTransaction(nrf24);
@@ -492,7 +488,7 @@ static WK_RESULT read_payload(struct rf24 *nrf24, void *buf, uint8_t data_len)
     nrf24->spi_txbuff[0] = R_RX_PAYLOAD;
     memset(nrf24->spi_txbuff + 1, RF24_NOP, size - 1);
     //CHK_RES(nrf24->bus->readWriteBytes(nrf24->bus, nrf24->addr, 0x00, size, nrf24->spi_rxbuff, nrf24->spi_txbuff));
-    ch341a_spi_send_command(size, size, nrf24->spi_txbuff, nrf24->spi_rxbuff);
+    esp32_cdc_send_command(size, size, nrf24->spi_txbuff, nrf24->spi_rxbuff);
     nrf24->status = nrf24->spi_rxbuff[0]; // 1st byte is status
     memcpy(buf, nrf24->spi_rxbuff + 1, data_len);
 error_exit:
@@ -1473,10 +1469,10 @@ static WK_RESULT toggle_features(struct rf24 *nrf24)
     WK_RESULT res = WK_OK;
     uint8_t command = ACTIVATE;
     //CHK_RES(nrf24->bus->readWriteBytes(nrf24->bus, nrf24->addr, 0x00, 1, &(nrf24->status), &command));
-    ch341a_spi_send_command(1, 1, &(nrf24->status), &command);
+    esp32_cdc_send_command(1, 1, &(nrf24->status), &command);
     //CHK_RES(nrf24->bus->writeByte(nrf24->bus, nrf24->addr, 0x00, 0x73));
     command = 0x73;
-    ch341a_spi_send_command(1, 0, &command, NULL);
+    esp32_cdc_send_command(1, 0, &command, NULL);
     return res;
 }
 

@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "spi_controller.h"
-#include "ch341a_gpio.h"
+#include "esp32_cdc.h"
 
 #define CS0_ENABLE 0x01   // |
 #define CS0_DISABLE 0xfe  // &
